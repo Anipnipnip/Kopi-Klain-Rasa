@@ -1,45 +1,61 @@
-import Order from "../models/order.js";
-import Product from "../models/product.js";
+const Order = require("../models/order");
+const Product = require("../models/product");
+const { getIO } = require("../socket");
 
 // =========================
-// Place Order (COD)
-
-export const placeOrder = async (req, res) => {
+// Place Order (COD / Transfer)
+const placeOrder = async (req, res) => {
   try {
     const userId = req.user?.id;
     const { items, customerName, tableNumber, paymentMethod } = req.body;
 
-    if (!userId || !items || items.length === 0 || !customerName || !tableNumber) {
+    if (!items || items.length === 0 || !customerName || !tableNumber) {
       return res.json({ success: false, message: "Invalid Data" });
     }
 
     let amount = 0;
     for (const item of items) {
       const product = await Product.findById(item.product);
-      if (!product) {
-        return res.json({ success: false, message: "Product not found" });
-      }
+      if (!product) return res.json({ success: false, message: "Product not found" });
       amount += product.price * Number(item.quantity);
     }
 
+    let isGuest = false;
+    let guestToken = null;
+
+    if (!userId) {
+      isGuest = true;
+      guestToken = `guest_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    }
+
     const newOrder = await Order.create({
-      userId,
+      userId: userId || null,
+      isGuest,
+      guestToken,
       items,
       amount,
       customerName,
       tableNumber,
       paymentMethod,
-      status: paymentMethod === "transfer" ? "Pending" : "Order Placed", // Untuk transfer, status awal Pending
       isPaid: false,
-      isGuest: false,
+      status: paymentMethod === "transfer" ? "Pending" : "Order Placed"
     });
+
+    // 🔥 populate sebelum emit
+    const populatedOrder = await Order.findById(newOrder._id)
+      .populate("items.product");
+
+    const io = getIO();
+    io.emit("new_order", populatedOrder);
 
     return res.json({
       success: true,
       message: "Order placed successfully",
-      order: newOrder,
-      orderId: newOrder._id.toString(), // Return _id sebagai orderId untuk Midtrans
+      order: populatedOrder,
+      orderId: newOrder._id,
+      guestToken,
     });
+
   } catch (error) {
     return res.json({ success: false, message: error.message });
   }
@@ -47,15 +63,17 @@ export const placeOrder = async (req, res) => {
 
 // =========================
 // Get orders by user
-// =========================
-export const getUserOrders = async (req, res) => {
+const getUserOrders = async (req, res) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
       return res.json({ success: false, message: "User not found" });
     }
 
-    const orders = await Order.find({ userId, $or: [{ paymentMethod: "cash" }, { isPaid: true }] })
+    const orders = await Order.find({
+      userId,
+      $or: [{ paymentMethod: "cash" }, { isPaid: true }]
+    })
       .populate("items.product")
       .sort({ createdAt: -1 });
 
@@ -67,10 +85,11 @@ export const getUserOrders = async (req, res) => {
 
 // =========================
 // Get all orders (seller/admin)
-// =========================
-export const getAllOrders = async (req, res) => {
+const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ $or: [{ paymentMethod: "cash" }, { isPaid: true }] })
+    const orders = await Order.find({
+      $or: [{ paymentMethod: "cash" }, { isPaid: true }]
+    })
       .populate("items.product")
       .sort({ createdAt: -1 });
 
@@ -82,10 +101,10 @@ export const getAllOrders = async (req, res) => {
 
 // =========================
 // Confirm COD Payment
-// =========================
-export const confirmCashPayment = async (req, res) => {
+const confirmCashPayment = async (req, res) => {
   try {
     const { orderId } = req.body;
+
     if (!orderId) {
       return res.json({ success: false, message: "Order ID tidak ada" });
     }
@@ -100,28 +119,63 @@ export const confirmCashPayment = async (req, res) => {
     }
 
     order.isPaid = true;
-    order.status = "Completed";
+    order.status = "Pesanan sedang dibuat";
     await order.save();
 
-    res.json({ success: true, message: "Pembayaran cash dikonfirmasi", order });
+    // 🔥 populate + realtime
+    const populatedOrder = await Order.findById(order._id)
+      .populate("items.product");
+
+    const io = getIO();
+    io.emit("order_updated", populatedOrder);
+
+    res.json({ success: true, message: "Pembayaran cash dikonfirmasi", order: populatedOrder });
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
 };
 
 // =========================
-// Get seller revenue
-// =========================
-// controllers/orderController.js
+// Mark as Delivered
+const markAsDelivered = async (req, res) => {
+  try {
+    const { orderId } = req.body;
 
-export const getTransactions = async (req, res) => {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.json({ success: false, message: "Order tidak ditemukan" });
+    }
+
+    if (!order.isPaid) {
+      return res.json({ success: false, message: "Belum dibayar" });
+    }
+
+    order.status = "Completed";
+    await order.save();
+
+    // 🔥 populate + realtime
+    const populatedOrder = await Order.findById(order._id)
+      .populate("items.product");
+
+    const io = getIO();
+    io.emit("order_updated", populatedOrder);
+
+    res.json({ success: true, message: "Pesanan selesai", order: populatedOrder });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// =========================
+// Get seller revenue / transactions (🔥 TIDAK DIUBAH)
+const getTransactions = async (req, res) => {
   try {
     const {
       start,
       end,
       status,
       channel,
-      period, // 🔥 tambahan: daily / weekly / monthly
+      period,
       page = 1,
       limit = 20,
       sort = "desc",
@@ -129,54 +183,44 @@ export const getTransactions = async (req, res) => {
 
     const match = {};
 
-    // 🔹 1. Hitung rentang waktu berdasarkan "period"
     if (period) {
       const now = new Date();
       let startDate;
 
-      if (period === "daily") {
-        // Awal hari ini
-        startDate = new Date(now.setHours(0, 0, 0, 0));
-      } else if (period === "weekly") {
-        // Awal minggu (Minggu)
+      if (period === "daily") startDate = new Date(now.setHours(0, 0, 0, 0));
+      else if (period === "weekly") {
         const firstDayOfWeek = new Date(now);
         firstDayOfWeek.setDate(now.getDate() - now.getDay());
         firstDayOfWeek.setHours(0, 0, 0, 0);
         startDate = firstDayOfWeek;
       } else if (period === "monthly") {
-        // Awal bulan ini
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       }
 
       match.createdAt = { $gte: startDate };
     }
 
-    // 🔹 2. Kalau ada start & end manual, override
     if (start || end) {
       match.createdAt = match.createdAt || {};
       if (start) match.createdAt.$gte = new Date(start);
       if (end) match.createdAt.$lte = new Date(end);
     }
 
-    // 🔹 3. Filter status (case-insensitive)
     if (status) {
       const statuses = status.split(",").map((s) => s.trim());
       match.status = { $in: statuses };
     }
 
-    // 🔹 4. Filter channel/payment method
     if (channel) {
       const channels = channel.split(",").map((c) => c.trim());
       match.paymentMethod = { $in: channels };
     }
 
-    // Pagination & sorting
     const pageNum = Math.max(Number(page) || 1, 1);
     const pageSize = Math.max(Number(limit) || 20, 1);
     const skip = (pageNum - 1) * pageSize;
     const sortOrder = sort === "asc" ? 1 : -1;
 
-    // 🔹 5. Aggregate pipeline
     const pipeline = [
       { $match: match },
       {
@@ -205,15 +249,12 @@ export const getTransactions = async (req, res) => {
     const metadata = result[0].metadata[0] || { total: 0, page: pageNum };
     const data = result[0].data || [];
 
-    // 🔹 6. Hitung total pendapatan
     const totalRevenueAgg = await Order.aggregate([
       { $match: match },
       { $group: { _id: null, totalAmount: { $sum: "$amount" } } },
     ]);
-
     const totalRevenue = totalRevenueAgg[0]?.totalAmount || 0;
 
-    // 🔹 7. Format data untuk frontend
     const rows = data.map((r) => ({
       orderId: r.orderId,
       createdAt: r.createdAt,
@@ -226,7 +267,6 @@ export const getTransactions = async (req, res) => {
       itemsCount: r.itemsCount || 0,
     }));
 
-    // 🔹 8. Response
     res.json({
       success: true,
       meta: {
@@ -234,7 +274,7 @@ export const getTransactions = async (req, res) => {
         page: metadata.page,
         limit: pageSize,
         totalPages: Math.ceil((metadata.total || 0) / pageSize),
-        totalRevenue, // 🔥 tambahan
+        totalRevenue,
       },
       data: rows,
     });
@@ -242,4 +282,13 @@ export const getTransactions = async (req, res) => {
     console.error("getTransactions error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+module.exports = {
+  placeOrder,
+  getUserOrders,
+  getAllOrders,
+  confirmCashPayment,
+  markAsDelivered,
+  getTransactions,
 };

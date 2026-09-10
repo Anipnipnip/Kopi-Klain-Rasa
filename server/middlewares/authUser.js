@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
 
 const authUser = (req, res, next) => {
   const { token } = req.cookies;
@@ -10,7 +10,7 @@ const authUser = (req, res, next) => {
   try {
     const tokenDecode = jwt.verify(token, process.env.JWT);
     if (tokenDecode.id) {
-      req.user = { id: tokenDecode.id };   // ✅ simpan ke req.user
+      req.user = { id: tokenDecode.id }; // ✅ simpan ke req.user
       next();
     } else {
       return res.json({ success: false, message: 'Not Authorized' });
@@ -20,4 +20,4 @@ const authUser = (req, res, next) => {
   }
 };
 
-export default authUser;
+module.exports = authUser;

@@ -5,8 +5,16 @@ import { useAppContext } from "../context/AppContext";
 const ProducCard = ({ product }) => {
   const { formatPrice, addToCart, removeFromCart, cartItems, navigate } = useAppContext();
 
+    const optimizedImage = product.image[0].replace(
+    "/upload/",
+    "/upload/f_auto,q_auto,w_250/"
+  );
+
+  console.log(optimizedImage);
+
   return product && (
-    <div className="border border-gray-500/20 rounded-lg md:px-4 px-3 py-4 bg-white w-full shadow-sm hover:shadow-md transition">
+    <div className="border border-gray-500/20 rounded-lg px-4 py-4 sm:px-3 bg-white w-full shadow-sm hover:shadow-md transition flex flex-col justify-between h-full text-[#3F171C] overflow-hidden">
+      
       {/* Gambar */}
       <div
         onClick={() => {
@@ -16,76 +24,78 @@ const ProducCard = ({ product }) => {
         className="group cursor-pointer flex items-center justify-center px-2"
       >
         <img
-          className="group-hover:scale-105 transition max-h-28 object-contain"
-          src={product.image[0]}
-          alt={product.name}
-        />
+  src={optimizedImage}
+  alt={product.name}
+  width={131}
+  height={110}
+  loading="lazy"
+  decoding="async"
+  className="group-hover:scale-105 transition max-h-28 object-contain"
+/>
       </div>
 
       {/* Info */}
-      <div className="text-gray-500/60 text-sm mt-2">
-        <p>{product.category}</p>
+      <div className="text-sm mt-3 flex flex-col flex-grow min-w-0">
+        <p className="opacity-70">{product.category}</p>
+
+        {/* Nama produk */}
         <p
           onClick={() => {
             navigate(`/products/${product.category.toLowerCase()}/${product._id}`);
             scrollTo(0, 0);
           }}
-          className="text-gray-700 font-medium text-lg truncate cursor-pointer hover:underline"
+          className="font-medium text-base line-clamp-2 cursor-pointer hover:underline"
         >
           {product.name}
         </p>
 
-        {/* Rating */}
-        <div className="flex items-center gap-0.5">
-          {Array(5)
-            .fill("")
-            .map((_, i) => (
-              <img
-                key={i}
-                className="md:w-3.5 w-3"
-                src={i < 4 ? assets.star_icon : assets.star_dull_icon}
-                alt=""
-              />
-            ))}
-          <p>(4)</p>
-        </div>
+        <div className="flex-grow"></div>
 
         {/* Harga + Button */}
-        <div className="flex items-end justify-between mt-3">
-          <p className="md:text-xl text-base font-medium text-primary">
+        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
+          
+          {/* Harga */}
+          <p className="text-[13px] sm:text-base font-semibold">
             {formatPrice(product.price)}
           </p>
 
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="text-primary flex-shrink-0"
-          >
+          {/* Button */}
+          <div onClick={(e) => e.stopPropagation()} className="sm:ml-auto">
             {!cartItems[product._id] ? (
               <button
-                className="flex items-center justify-center gap-1 bg-primary/10 border border-primary/40 md:w-[80px] w-[64px] h-[34px] rounded cursor-pointer"
+                className="flex items-center justify-center gap-1 bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-black px-2 h-[34px] rounded text-sm whitespace-nowrap transition active:scale-95 w-full sm:w-auto"
                 onClick={() => addToCart(product._id)}
               >
-                <img src={assets.cart_icon} alt="cart_icon" />
+                <img
+                  className="w-4 h-4 filter brightness-0"
+                  src={assets.cart_icon}
+                  alt="cart_icon"
+                />
                 Add
               </button>
             ) : (
-              <div className="flex items-center justify-center gap-2 md:w-20 w-16 h-[34px] bg-indigo-500/25 rounded select-none">
+              <div className="flex items-center justify-between px-1 w-full sm:w-[90px] h-[34px] bg-[#3F171C]/20 rounded text-sm">
                 <button
                   onClick={() => removeFromCart(product._id)}
-                  className="cursor-pointer text-md px-2 h-full"
+                  className="px-2 h-full"
                 >
                   -
                 </button>
-                <span className="w-5 text-center">{cartItems[product._id]}</span>
+
+                <span className="text-center w-5">
+                  {cartItems[product._id]}
+                </span>
+
                 <button
                   onClick={() => addToCart(product._id)}
-                  className="cursor-pointer text-md px-2 h-full"
+                  className="px-2 h-full"
                 >
                   +
                 </button>
               </div>
             )}
           </div>
+
         </div>
       </div>
     </div>

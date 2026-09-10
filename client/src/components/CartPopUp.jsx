@@ -15,19 +15,19 @@ const CartPopup = () => {
   const [visible, setVisible] = useState(false);
   const cartEntries = Object.entries(cartItems);
 
-  // ✨ trigger animation on mount
+  // trigger animation on mount
   useEffect(() => {
     setVisible(true);
   }, []);
 
   const handleClose = () => {
     setVisible(false);
-    setTimeout(() => setShowCartPopup(false), 300); // tunggu animasi selesai
+    setTimeout(() => setShowCartPopup(false), 300);
   };
 
   return (
     <div
-      className={`fixed bottom-4 right-4 z-50 w-[95%] max-w-md pointer-events-none`}
+      className="fixed bottom-4 right-4 z-50 w-[95%] max-w-md pointer-events-none"
       aria-live="polite"
     >
       <div
@@ -41,16 +41,13 @@ const CartPopup = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">Keranjang</h3>
-          <div className="flex items-center gap-2">
-
-            <button
-              onClick={handleClose}
-              aria-label="Close cart popup"
-              className="text-gray-600 hover:text-gray-900 px-2 py-1 rounded-md"
-            >
-              ✕
-            </button>
-          </div>
+          <button
+            onClick={handleClose}
+            aria-label="Close cart popup"
+            className="text-gray-600 hover:text-gray-900 px-2 py-1 rounded-md"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Isi ringkasan */}
@@ -61,6 +58,7 @@ const CartPopup = () => {
             {cartEntries.map(([id, qty]) => {
               const product = products.find((p) => p._id === id);
               if (!product) return null;
+
               return (
                 <div key={id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -101,23 +99,15 @@ const CartPopup = () => {
             <p className="font-semibold">{formatPrice(getCartAmount())}</p>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                handleClose();
-                navigate("/cart");
-              }}
-              className="py-2 px-3 border rounded-md text-sm"
-            >
-              Checkout
-            </button>
-            <button
-              onClick={handleClose}
-              className="py-2 px-3 bg-yellow-500 text-black rounded-md text-sm font-medium"
-            >
-              Tutup
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              handleClose();
+              navigate("/cart");
+            }}
+            className="py-2 px-4 bg-yellow-500 text-black rounded-md text-sm font-medium hover:bg-yellow-400 transition"
+          >
+            Bayar
+          </button>
         </div>
       </div>
     </div>

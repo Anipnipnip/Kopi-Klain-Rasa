@@ -7,10 +7,10 @@ const SellerLayout = () => {
   const { axios, navigate } = useAppContext();
 
   const sidebarLinks = [
-    { name: "Add Product", path: "/seller", icon: assets.add_icon },
-    { name: "Product List", path: "/seller/product-list", icon: assets.product_list_icon },
-    { name: "Orders", path: "/seller/orders", icon: assets.order_icon },
-    { name: "Transactions", path: "/seller/transactions", icon: assets.transactions_icon },
+    { name: "Tambah Menu", path: "/seller", icon: assets.add_icon },
+    { name: "Manajemen Menu", path: "/seller/product-list", icon: assets.product_list_icon },
+    { name: "Pesanan", path: "/seller/orders", icon: assets.order_icon },
+    { name: "Pendapatan", path: "/seller/transactions", icon: assets.transactions_icon },
   ];
 
   const logout = async () => {

@@ -24,7 +24,6 @@ export const AppContextProvider = ({ children }) => {
   const [orders, setOrders] = useState([]);
   const [showCartPopup, setShowCartPopup] = useState(false);
 
-
   // ==========================
   // Helper Functions
   // ==========================
@@ -53,7 +52,7 @@ export const AppContextProvider = ({ children }) => {
       const { data } = await axios.get("/api/user/is-auth");
       if (data.success) {
         setUser(data.user);
-        setCartItems(data.user.cartItems || {}); // fallback supaya aman
+        setCartItems(data.user.cartItems || {});
       }
     } catch {
       setUser(null);
@@ -89,20 +88,21 @@ export const AppContextProvider = ({ children }) => {
   // ==========================
   // Cart Functions
   // ==========================
-const addToCart = (itemId, { showPopup = true } = {}) => {
-  const cartData = { ...cartItems };
-  cartData[itemId] = (cartData[itemId] || 0) + 1;
-  setCartItems(cartData);
-  toast.success("Added to cart");
+  const addToCart = (itemId, { showPopup = true, showToast = true } = {}) => {
+    const cartData = { ...cartItems };
+    cartData[itemId] = (cartData[itemId] || 0) + 1;
+    setCartItems(cartData);
 
-  // hanya munculin popup jika showPopup true
-  if (showPopup) {
-    setShowCartPopup(true);
+    // 🔥 kontrol toast
+    if (showToast) {
+      toast.success("Added to cart");
+    }
 
-  }
-};
-
-
+    // 🔥 kontrol popup
+    if (showPopup) {
+      setShowCartPopup(true);
+    }
+  };
 
   const updateCartItem = (itemId, quantity) => {
     const cartData = { ...cartItems };
@@ -156,7 +156,7 @@ const addToCart = (itemId, { showPopup = true } = {}) => {
         toast.success(data.message);
         setCartItems({});
         navigate("/my-orders");
-        fetchOrders(); // ✅ ambil ulang orders setelah order baru dibuat
+        fetchOrders();
       } else {
         toast.error(data.message);
       }
@@ -193,7 +193,7 @@ const addToCart = (itemId, { showPopup = true } = {}) => {
 
   useEffect(() => {
     if (user) {
-      fetchOrders(); // ✅ fetch orders tiap kali user login/berubah
+      fetchOrders();
     }
   }, [user]);
 

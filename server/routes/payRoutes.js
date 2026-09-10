@@ -1,9 +1,10 @@
-import express from "express";
-import {
+const express = require("express");
+
+const {
   createTransaction,
   handleNotification,
   checkTransactionStatus,
-} from "../controllers/midtransController.js";
+} = require("../controllers/midtransController");
 
 const router = express.Router();
 
@@ -11,4 +12,4 @@ router.post("/create", createTransaction);
 router.post("/notification", handleNotification);
 router.get("/status/:orderId", checkTransactionStatus);
 
-export default router;
+module.exports = router;

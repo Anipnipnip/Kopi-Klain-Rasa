@@ -114,7 +114,7 @@ const Transactions = () => {
     <div className="p-6">
       {/* Header + total pendapatan */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold">Transactions</h2>
+        <h2 className="text-2xl font-semibold">Transaksi</h2>
 
         <div className="text-right">
           <p className="text-sm text-gray-600">
@@ -162,8 +162,8 @@ const Transactions = () => {
             onChange={(e) => setSort(e.target.value)}
             className="border rounded px-3 py-1"
           >
-            <option value="desc">Newest</option>
-            <option value="asc">Oldest</option>
+            <option value="desc">Terbaru</option>
+            <option value="asc">Terlama</option>
           </select>
         </div>
       </div>
@@ -173,13 +173,13 @@ const Transactions = () => {
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left">Date & Time</th>
+              <th className="px-6 py-3 text-left">Waktu & Tanggal</th>
               <th className="px-6 py-3 text-left">Order ID</th>
-              <th className="px-6 py-3 text-left">Transaction Type</th>
-              <th className="px-6 py-3 text-left">Channel</th>
+              <th className="px-6 py-3 text-left">Tipe Transaksi</th>
+              <th className="px-6 py-3 text-left">Metode</th>
               <th className="px-6 py-3 text-left">Status</th>
-              <th className="px-6 py-3 text-right">Amount</th>
-              <th className="px-6 py-3 text-left">Customer Email</th>
+              <th className="px-6 py-3 text-right">Harga</th>
+              <th className="px-6 py-3 text-left">Pembeli</th>
             </tr>
           </thead>
           <tbody>

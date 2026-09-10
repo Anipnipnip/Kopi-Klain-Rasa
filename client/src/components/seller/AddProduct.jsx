@@ -52,7 +52,7 @@ const AddProduct = () => {
             <form onSubmit={onSubmitHandler} className="md:p-10 p-4 space-y-5 max-w-lg">
                 {/* Upload Image */}
                 <div>
-                    <p className="text-base font-medium">Product Image</p>
+                    <p className="text-base font-medium">Gambar Menu</p>
                     <div className="flex flex-wrap items-center gap-3 mt-2">
                         {Array(4).fill('').map((_, index) => (
                             <label key={index} htmlFor={`image${index}`}>
@@ -80,13 +80,13 @@ const AddProduct = () => {
 
                 {/* Product Name */}
                 <div className="flex flex-col gap-1 max-w-md">
-                    <label className="text-base font-medium" htmlFor="product-name">Product Name</label>
+                    <label className="text-base font-medium" htmlFor="product-name">Nama Menu</label>
                     <input 
                         onChange={(e) => setName(e.target.value)} 
                         value={name} 
                         id="product-name" 
                         type="text" 
-                        placeholder="Type here" 
+                        placeholder="Ketik disini..." 
                         className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40" 
                         required 
                     />
@@ -94,27 +94,27 @@ const AddProduct = () => {
 
                 {/* Product Description */}
                 <div className="flex flex-col gap-1 max-w-md">
-                    <label className="text-base font-medium" htmlFor="product-description">Product Description</label>
+                    <label className="text-base font-medium" htmlFor="product-description">Deskripsi Menu</label>
                     <textarea 
                         onChange={(e) => setDescription(e.target.value)} 
                         value={description} 
                         id="product-description" 
                         rows={4} 
                         className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40 resize-none" 
-                        placeholder="Type here">
+                        placeholder="Ketik disini...">
                     </textarea>
                 </div>
 
                 {/* Category */}
                 <div className="w-full flex flex-col gap-1">
-                    <label className="text-base font-medium" htmlFor="category">Category</label>
+                    <label className="text-base font-medium" htmlFor="category">Kategori</label>
                     <select 
                         onChange={(e) => setCategory(e.target.value)} 
                         value={category}
                         id="category" 
                         className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
                     >
-                        <option value="">Select Category</option>
+                        <option value="">Pilih Kategori</option>
                         {categories.map((item,index) => (
                             <option key={index} value={item.path}>{item.path}</option>
                         ))}
@@ -123,7 +123,7 @@ const AddProduct = () => {
 
                 {/* Product Price */}
                 <div className="flex-1 flex flex-col gap-1 w-32">
-                    <label className="text-base font-medium" htmlFor="product-price">Product Price</label>
+                    <label className="text-base font-medium" htmlFor="product-price">Harga Menu</label>
                     <input 
                         onChange={(e) => setPrice(e.target.value)} 
                         value={price}
@@ -136,7 +136,7 @@ const AddProduct = () => {
                 </div>
 
                 <button className="px-8 py-2.5 bg-indigo-500 text-white font-medium rounded cursor-pointer">
-                    ADD
+                    TAMBAH
                 </button>
             </form>
         </div>

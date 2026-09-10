@@ -1,21 +1,27 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema({
-  userId: { type: String, required: true, ref: "user" },
-  customerName: { type: String, required: true },
-  tableNumber: { type: String, required: true },
+  userId: { type: String, ref: "user" },
+  isGuest: { type: Boolean, default: false },
+  guestToken: { type: String },
+
+  customerName: String,
+  tableNumber: String,
+
   items: [
     {
-      product: { type: mongoose.Schema.Types.ObjectId, ref: "product", required: true },
-      quantity: { type: Number, required: true },
+      product: { type: mongoose.Schema.Types.ObjectId, ref: "product" },
+      quantity: Number,
     },
   ],
-  amount: { type: Number, required: true },
+
+  amount: Number,
   status: { type: String, default: "Order Placed" },
-  paymentMethod: { type: String, default: "cash" },
-  isPaid: { type: Boolean, default: false },
-  orderId: { type: String }, // Tambahkan ini untuk menyimpan orderId Midtrans
+  paymentMethod: String,
+  isPaid: Boolean,
+  orderId: String,
 }, { timestamps: true });
 
 const Order = mongoose.models.order || mongoose.model("order", orderSchema);
-export default Order;
+
+module.exports = Order;

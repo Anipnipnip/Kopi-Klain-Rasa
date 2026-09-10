@@ -1,6 +1,6 @@
-import User from "../models/user.js";
+const User = require("../models/user");
 
-export const updateCart = async (req, res) => {
+const updateCart = async (req, res) => {
   try {
     const { cartItems } = req.body;
 
@@ -28,5 +28,4 @@ export const updateCart = async (req, res) => {
   }
 };
 
-
-export default updateCart;
+module.exports = updateCart;

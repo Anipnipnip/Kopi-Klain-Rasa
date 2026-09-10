@@ -1,18 +1,29 @@
-import express from 'express';
-import authUser from '../middlewares/authUser.js';
-import {confirmCashPayment, getAllOrders, getTransactions, getUserOrders, placeOrder } from '../controllers/orderController.js';
-import authSeller from '../middlewares/authSeller.js';
+const express = require('express');
+
+const authUser = require('../middlewares/authUser');
+const authSeller = require('../middlewares/authSeller');
+const authGuestUser = require('../middlewares/authGuestUser');
+
+const {
+  confirmCashPayment,
+  getAllOrders,
+  getTransactions,
+  getUserOrders,
+  placeOrder,
+  markAsDelivered
+} = require('../controllers/orderController');
 
 const orderRouter = express.Router();
 
-orderRouter.post('/pay', authUser, placeOrder);   // bikin order (COD)
-orderRouter.get('/user', authUser, getUserOrders);   // ambil order user
-orderRouter.get('/seller', authSeller, getAllOrders) // ambil semua order
+orderRouter.post('/pay', authUser, placeOrder);
+orderRouter.get('/user', authUser, getUserOrders);
+orderRouter.get('/seller', authSeller, getAllOrders);
 orderRouter.post("/confirm-cash", authSeller, confirmCashPayment);
+
+// 🔥 NEW
+orderRouter.post("/mark-delivered", authSeller, markAsDelivered);
+
 orderRouter.get("/transactions", getTransactions);
-orderRouter.post("/place", authUser, placeOrder);
+orderRouter.post("/place", authGuestUser, placeOrder);
 
-
-
-
-export default orderRouter;
+module.exports = orderRouter;

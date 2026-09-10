@@ -1,10 +1,10 @@
-import express from "express";
-import authUser from "../middlewares/authUser.js";
-import updateCart from "../controllers/cartController.js";
+const express = require("express");
 
+const authUser = require("../middlewares/authUser");
+const updateCart = require("../controllers/cartController");
 
 const cartRouter = express.Router();
 
 cartRouter.post('/update', authUser, updateCart);
 
-export default cartRouter;
+module.exports = cartRouter;

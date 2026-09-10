@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // ⬅️ import navigate
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const { cartItems, products, formatPrice, removeFromCart, getCartAmount } = useAppContext();
@@ -11,7 +11,7 @@ const Cart = () => {
   const [paymentMethod, setPaymentMethod] = useState("transfer");
   const [snapToken, setSnapToken] = useState(null);
 
-  const navigate = useNavigate(); // ⬅️ hook navigate
+  const navigate = useNavigate();
 
   const handleCheckout = async (e) => {
     e.preventDefault();
@@ -20,28 +20,39 @@ const Cart = () => {
     }
 
     if (paymentMethod === "cash") {
-      const { data } = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/order/place`, {
-        items: Object.entries(cartItems).map(([id, qty]) => ({ product: id, quantity: qty })),
-        customerName,
-        tableNumber,
-        paymentMethod,
-      }, { withCredentials: true });
-
-      if (data.success) {
-        toast.success("Silahkan ke kasir untuk pembayaran agar pesanan bisa diproses");
-        navigate("/my-orders"); // ⬅️ langsung ke MyOrders
-      }
-      return;
-    }
-
-    if (paymentMethod === "transfer") {
-      try {
-        const orderRes = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/order/place`, {
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/order/place`,
+        {
           items: Object.entries(cartItems).map(([id, qty]) => ({ product: id, quantity: qty })),
           customerName,
           tableNumber,
           paymentMethod,
-        }, { withCredentials: true });
+        },
+        { withCredentials: true }
+      );
+
+if (data.success) {
+  toast.success("Silahkan ke kasir untuk pembayaran agar pesanan bisa diproses", {
+    duration: 6000, // 6 detik (bisa disesuaikan)
+  });
+  navigate("/");
+}
+return;
+
+    }
+
+    if (paymentMethod === "transfer") {
+      try {
+        const orderRes = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/order/place`,
+          {
+            items: Object.entries(cartItems).map(([id, qty]) => ({ product: id, quantity: qty })),
+            customerName,
+            tableNumber,
+            paymentMethod,
+          },
+          { withCredentials: true }
+        );
 
         if (!orderRes.data.success) {
           return toast.error("Gagal membuat order");
@@ -49,15 +60,19 @@ const Cart = () => {
 
         const orderId = orderRes.data.orderId;
 
-        const { data } = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/midtrans/create`, {
-          orderId,
-          amount: getCartAmount(),
-          customer: { name: customerName, email: "customer@example.com" },
-          items: Object.entries(cartItems).map(([id, qty]) => {
-            const product = products.find((p) => p._id === id);
-            return { id, name: product?.name, price: product?.price, quantity: qty };
-          }),
-        }, { withCredentials: true });
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/midtrans/create`,
+          {
+            orderId,
+            amount: getCartAmount(),
+            customer: { name: customerName, email: "customer@example.com" },
+            items: Object.entries(cartItems).map(([id, qty]) => {
+              const product = products.find((p) => p._id === id);
+              return { id, name: product?.name, price: product?.price, quantity: qty };
+            }),
+          },
+          { withCredentials: true }
+        );
 
         setSnapToken(data.token);
 
@@ -65,7 +80,7 @@ const Cart = () => {
           window.snap.pay(data.token, {
             onSuccess: () => {
               toast.success("Pembayaran berhasil!");
-              navigate("/my-orders"); // ⬅️ redirect otomatis ke MyOrders
+              navigate("/");
             },
             onPending: () => toast("Menunggu pembayaran..."),
             onError: () => toast.error("Pembayaran gagal"),
@@ -120,7 +135,10 @@ const Cart = () => {
       </div>
 
       {/* Order Summary */}
-      <form onSubmit={handleCheckout} className="flex-1 border p-6 rounded-lg shadow-lg bg-white transition-shadow duration-300 hover:shadow-xl">
+      <form
+        onSubmit={handleCheckout}
+        className="flex-1 border p-6 rounded-lg shadow-lg bg-white transition-shadow duration-300 hover:shadow-xl"
+      >
         <label className="block mb-2">Nama</label>
         <input
           type="text"
@@ -144,8 +162,7 @@ const Cart = () => {
         <label className="block mb-2">Metode Pembayaran</label>
         <div className="mb-4 flex gap-4">
           <label
-            className={`
-              flex-1 text-center py-2 rounded-lg cursor-pointer font-medium transition
+            className={`flex-1 text-center py-2 rounded-lg cursor-pointer font-medium transition
               ${paymentMethod === "transfer" ? "bg-yellow-500 text-black shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
             `}
           >
@@ -161,8 +178,7 @@ const Cart = () => {
           </label>
 
           <label
-            className={`
-              flex-1 text-center py-2 rounded-lg cursor-pointer font-medium transition
+            className={`flex-1 text-center py-2 rounded-lg cursor-pointer font-medium transition
               ${paymentMethod === "cash" ? "bg-yellow-500 text-black shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
             `}
           >
@@ -177,6 +193,13 @@ const Cart = () => {
             Cash
           </label>
         </div>
+
+        {/* 🔥 Paragraf tambahan khusus pembayaran cash (posisi: tepat di bawah pilihan payment) */}
+        {paymentMethod === "cash" && (
+          <p className="text-sm text-yellow-700 bg-yellow-100 p-2 rounded mb-4 border border-yellow-300">
+            Silahkan melakukan pembayaran di kasir dengan memberitahu nama dan nomor meja
+          </p>
+        )}
 
         <p className="mb-2">Subtotal: {formatPrice(getCartAmount())}</p>
         <p className="font-semibold mb-4">Total: {formatPrice(getCartAmount())}</p>

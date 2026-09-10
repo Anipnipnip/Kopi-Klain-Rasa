@@ -9,7 +9,7 @@ const Testimonials = () => {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 1 }}
       viewport={{ once: true }}
-      className="mt-16 px-4 md:px-8 py-12 rounded-2xl 
+      className="mt-16 px-4 md:px-8 py-12 pb-32 rounded-2xl
                 bg-[#B1A1A3]"
     >
       <p className="text-2xl md:text-3xl font-medium text-center text-white">
