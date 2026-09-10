@@ -27,7 +27,7 @@ const server = createServer(app);
 // 🔥 SOCKET IO
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'https://kopi-klain-rasa-production.up.railway.app/'],
     credentials: true
   }
 });
