@@ -32,3 +32,4 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+server/node_modules.zip
